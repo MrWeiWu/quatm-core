@@ -8,7 +8,10 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    # Pin the runner image: ubuntu-latest now resolves to 26.04, for which
+    # actions/setup-python does not publish a Python 3.9 x64 build. Ubuntu
+    # 24.04 has 3.9, 3.11 and 3.13 toolcache builds available.
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         python-version: ["3.9", "3.11", "3.13"]
