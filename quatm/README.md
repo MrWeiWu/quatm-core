@@ -8,7 +8,7 @@ This directory is the public AGPL-3.0 core of Quatm:
 - `utils/` — shared utilities
 
 The desktop GUI, web console, licensing layer, analysis tools, monitoring tools
-and vendor driver catalogue are separate proprietary components. They are not
+and vendor driver catalogue are separate commercial components. They are not
 part of this package.
 
 See the repository [README](../README.md) and [LICENSE](../LICENSE).
