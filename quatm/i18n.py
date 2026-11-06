@@ -1,52 +1,21 @@
-"""轻量 i18n：把用户可见文字从代码里独立出来，并按系统语言自动选语言包。
+"""Localization helpers for Quatm user-facing text.
 
-语言包
-------
-* **内置**：``quatm/locale/zh.json``（随包发布；历史位置是
-  ``quatm/GUI/infra/locale/``，代码对新旧位置都兼容）；
-* **项目覆盖**：``<项目根>/configuration/locale/<lang>.json``（实验室自己改措辞，
-  不用动代码、不用重新打包；同名 key 覆盖内置值）。
+Catalogs are JSON mappings from source English strings to translated strings.
+The built-in catalog lives in ``quatm/locale/zh.json``; a user project can
+override entries in ``<project>/configuration/locale/<lang>.json``. Missing
+keys fall back to the source string, so a partial catalog never produces empty
+labels.
 
-目录内容是 ``{代码里的原字符串: 该语言的字符串}``。缺 key 时**回退到代码里的
-原字符串**，所以即使语言包没跟上也能正常跑，不会出现空白按钮。
+Language selection (highest priority first):
 
-只有**一个翻译方向**：源码里的界面文字一律英文（``SOURCE_LANGUAGE = 'en'``），
-``zh.json`` 负责“英文 → 中文”。因此：
+1. ``QUATM_LANG=zh|en|auto``;
+2. the project's ``configuration/locale/settings.json``;
+3. the operating-system language (Chinese locales select ``zh``; others use
+   the English source strings).
 
-* 系统是中文 → 查 ``zh.json``；
-* 系统是其它语言 → 直接用英文原文（不需要语言包）。
-
-历史上代码里混有一批写死的中文界面文字，靠 ``en.json`` 把它们“翻回”英文——
-那是双向翻译表，容易搞混、容易漏（2026-09-13 已把源码原文统一成英文，
-``en.json`` 已删除）。以后**不要在源码里写中文界面文字**：
-``tools/i18n/check.py`` 会把界面位置上的中文字面量当错误报出来。
-
-语言选择（优先级从高到低）
---------------------------
-1. 环境变量 ``QUATM_LANG=zh|en|auto``（``auto`` = 跟随系统，等于没设）；
-2. 项目设置 ``<项目根>/configuration/locale/settings.json`` 的 ``language``；
-3. **系统默认语言**：macOS 首选语言 → ``QLocale.system()``（取不到时退回
-   ``LANG``/``LC_ALL``/``LANGUAGE``），``zh*`` → 中文，其余 → 英文。
-
-用法::
-
-    from quatm.GUI.infra.i18n import tr
-
-    button.setText(tr('Save'))                    # 查表；缺 key 用原文
-    label.setText(tr('{n} files', n=3))           # 给了占位符才会 format()
-
-约定：
-* 只给 ``tr()`` 传**字面量**，别拼字符串（``tr('a' + 'b')`` 查不到表）；
-* 文案交给辅助函数显示时（``add_widget(w, 'Task:', tooltip=…)``、
-  ``icon_btn(icon, tip, …)``、``_config_field(section, label, …)``），在辅助函数
-  **渲染处**统一 ``tr()``，别在调用点各自包；
-* 文本会被当**取值**用的控件（下拉/复选框）写成 ``addItem(tr(x), x)``，取值走
-  ``currentData()/isChecked()``，绝不能拿 ``currentText()`` 去比较；
-* **专有名词/显示名**（窗口名、GUI 名）要双语就用 :func:`localized_label`
-  （``实验浏览器（Browser）``）——既让中文用户看懂，又和英文界面/日志对得上；
-* 字符串里带 ``{}`` 但没有占位符参数时不会被 format（JSON 示例文本常含 ``{}``）；
-* 语言在进程启动时定一次（:func:`init_i18n`，由 ``setup_app_theme`` 调用），
-  :func:`set_language` 只影响之后新建的界面（已存在的控件不会自动重译）。
+Public helpers include :func:`tr`, :func:`set_language`,
+:func:`localized_label` and :func:`install_qt_translations`. The module is
+standard-library only; Qt support is imported lazily by the optional GUI.
 """
 
 import json

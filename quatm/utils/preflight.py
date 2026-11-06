@@ -1,65 +1,9 @@
-"""维护自检（preflight）：长期运行/维护窗口前后的一次性只读检查 CLI。
+"""Preflight checks for a Quatm project and its runtime environment.
 
-为什么需要它
-------------
-长期运行的系统（Property Logger / Hubs / H5 / 队列 / 隔离子进程 / CURVE 加密）
-在**停服维护、升级、灾难恢复**前后需要一份统一的“现在能不能安全开工”的
-体检报告。以前这些检查散落在各服务启动日志里，靠人 grep；本 CLI 把它们收成
-一次性、可脚本化、可被 GUI/CI 调用的 JSON 输出。
-
-用法
-----
-::
-
-    python -m quatm.utils.preflight                 # 人读摘要 + 最后一行 JSON
-    python -m quatm.utils.preflight --json          # 只输出 JSON（机器读）
-    python -m quatm.utils.preflight --no-network    # CI/离线：跳过 TCP 探测
-    python -m quatm.utils.preflight --snapshot      # 额外执行 scripts/snapshot.sh
-    python -m quatm.utils.preflight --strict        # warn 也算失败（退出码 1）
-    python -m quatm.utils.preflight --clean-stale   # 实际清理陈旧设备租约
-
-输出/退出码契约
----------------
-stdout **最后一行**是一个 JSON 对象（`--json` 时是唯一输出）::
-
-    {'ok': bool,
-     'checks': [{'name': str, 'level': 'ok'|'warn'|'error',
-                 'detail': str, 'fix': str}, ...],
-     'ts': '<ISO-8601>',
-     'project': '<项目根>'}
-
-退出码：``0`` = 没有 error（`--strict` 时也没有 warn）；``1`` = 有 error
-（或 `--strict` 下有 warn）；``2`` = 用法错误。
-
-检查项（每项独立 try/except，单项异常只记 error，绝不让整份报告崩掉）
---------------------------------------------------------------------
-1. ``project``  ：项目根/``configuration``/``device_db.py`` 存在且可静态解析；
-2. ``services`` ：configfile 里各服务的 tcp 端点短超时（0.3 s）连接检查、
-   ipc 端点路径存在性；`--no-network` 跳过 tcp；
-3. ``leases``   ：设备租约（``quatm.servers.device_lease``）陈旧数量；默认只
-   报告，`--clean-stale` 才清理；若有 bus 锁信息（task-49 之后）一并报告；
-4. ``orphans``  ：遗留的 ``quatm.experiment.runner`` 子进程（POSIX 读
-   ``/proc`` 或用 ``ps``；Windows 跳过并说明）；**只报告**，给出 kill 建议；
-5. ``disk``     ：项目盘剩余空间（<1 GiB error / <2 GiB warn）、消息/推送 DB
-   与 properties.json 大小；
-6. ``db``       ：SQLite 可打开且 ``PRAGMA quick_check`` 通过、properties.json
-   是合法 JSON；损坏给可执行的修复建议；
-7. ``curves``   ：ZMQ CURVE 密钥目录/权限（POSIX 0600）、env 与 configfile
-   开关一致性、轮换需“全进程同时重启”的提示；
-8. ``history``  ：``configuration/devices/health_history.jsonl`` 与
-   ``configuration/health/resource_history.jsonl`` 可读/可写、大小与末行 JSON；
-9. ``snapshot`` ：仅 ``--snapshot`` 时执行现有 ``scripts/snapshot.sh``（不改其
-   语义），捕捉输出。
-
-安全/边界
----------
-* 只读设计：除 ``--clean-stale``（删陈旧租约）与 ``--snapshot``（写快照包）
-  外不修改任何文件/服务；不会启动或停止进程。
-* 模块级**不 import** GUI / drivers / web / licensing，避免把 Qt/硬件依赖带进
-  维护脚本；``quatm.servers.*`` 只在具体检查函数内延迟 import。
-* 所有网络探测都是**短超时**、失败即记录，不会挂住维护窗口。
-* 文档见 ``docs/operations/maintenance.md``（停/起顺序、CURVE 轮换、DB 保留/
-  VACUUM、快照/DR、年度演练）。
+The command inspects configuration, stale processes, bus locks and optional
+resources, then emits JSON so it can be used interactively or by CI/deployment
+scripts. It deliberately avoids importing Qt, drivers, the web console or the
+licensing layer.
 """
 
 import argparse
@@ -574,7 +518,7 @@ def _disk_usage(path):
 def _resource_monitor_summary():
     """若 ``resource_monitor`` 已就绪，返回它的资源摘要（否则 None）。
 
-    不 import GUI；task-51 交付的模块若有 ``collect_resources()`` 就复用，
+    不 import GUI；the resource-monitor integration 交付的模块若有 ``collect_resources()`` 就复用，
     任何不兼容/异常都静默降级（preflight 自己已有轻量 getsize 兜底）。
     """
     try:

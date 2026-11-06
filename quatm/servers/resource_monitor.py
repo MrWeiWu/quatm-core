@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""长期运行健康采样：磁盘余量 / 本地库尺寸 / 进程 fd/线程/RSS（P0-1、P1-6）。
+"""长期运行健康采样：磁盘余量 / 本地库尺寸 / 进程 fd/线程/RSS（reliability hardening、reliability hardening）。
 
 本模块只做**只读**探测，不写 Properties、不触发硬件/网络，供 GUI（Task &
 Process Monitor 的 Health 页）、Web 与启动前 preflight 共用。设计约束：

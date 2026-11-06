@@ -1,6 +1,6 @@
 # quatm package
 
-This directory is the public AGPLv3 core of Quatm:
+This directory is the public AGPL-3.0 core of Quatm:
 
 - `experiment/` — experiment lifecycle, parameters and scans
 - `physics/` — atomic and ionic physics models

@@ -1,28 +1,9 @@
-"""诊断仪器连接问题（用于排查“设备无法加载”）。
+"""Diagnose instrument connection problems.
 
-用法（在用户项目目录或设置了 QUATM_PROJECT_ROOT 的环境里）::
-
-    python -m quatm.utils.driver_diagnose
-    quatm-driver-diagnose USB0::0x1AB1::0x0E11::DP8A::INSTR
-    quatm-driver-diagnose            # 缺省从 configuration/device_db.py 读地址
-
-默认行为：用 `quatm.utils.device_db` 解析项目 ``configuration/device_db.py``，
-取出登记的设备地址（VISA / 串口 / 网络三种写法都认），然后逐地址探测并报告：
-
-1. 项目根与 device_db 的解析结果（条目数、按类型统计、含表达式的条目）；
-2. pyvisa 后端与系统当前枚举到的全部 VISA 资源；
-3. 每个地址能否打开、``*IDN?`` 是什么。
-
-探测**优先复用** `quatm.drivers.discovery.probe`——那是设备管理器与实验用的同
-一条 `comm` 路径，串口与 TCP 地址同样能测；而 `quatm/drivers/` 是专有子包且带
-许可门控，不可用时本工具自动退回自己的 pyvisa 单地址探测，**不会因此跑不起来**
-（诊断工具往往正是在“设备连不上”时才被拿出来用）。
-
-据此可区分三类问题：
-
-* 资源列表里没有该设备 → 硬件/USB 线缆/USB 驱动问题（与 quatm 无关）；
-* 资源在列表里但地址打不开/ID 不符 → 设备串号变了，更新 device_db；
-* 能打开 → 驱动层没问题，检查具体操作或设备设置。
+The command reads addresses from a project ``configuration/device_db.py`` (or
+accepts them on the command line), probes VISA/serial/TCP resources and reports
+what could be opened. Driver discovery from the optional platform is used when
+available; the tool falls back to its own VISA probe otherwise.
 """
 import argparse
 import sys

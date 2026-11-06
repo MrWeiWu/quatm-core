@@ -1,3 +1,5 @@
+"""Feshbach-resonance plotting helpers for atom-ion experiments."""
+
 import numpy as np
 import pandas
 import pandas as pd
@@ -24,7 +26,7 @@ ticker = lazy_module('matplotlib.ticker')
 container = lazy_module('matplotlib.container')
 InfluxDBClient = lazy_attr('influxdb_client', 'InfluxDBClient')
 
-# 解析器在 AGPL 的 quatm.servers 里（physics 不能反向依赖专有的 quatm.clients）。
+# 解析器在 AGPL 的 quatm.servers 里（physics 不能反向依赖可选的 quatm.clients）。
 from quatm.servers.influx_config import (InfluxDBConfigError,
                                          resolve_influx_config)
 from quatm.utils.i18n import tr
@@ -324,7 +326,6 @@ def load_arbitrary_data_combined(fns, groups):
             df2 = pd.read_csv(fn, delim_whitespace=True)
             dfc = dfc.groupby(groups).sum().add(df2.groupby(groups).sum(), fill_value=0).reset_index()
 
-    # TODO: Drop all columns which are not in groups or ['N_surv', 'N_det', 'N_d52', 'N_loss']
 
     result = pd.DataFrame(columns=np.concatenate((groups, ['N_surv', 'N_det', 'N_d52', 'N_loss'])))
     

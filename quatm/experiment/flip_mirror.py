@@ -1,3 +1,5 @@
+"""Experiment helper for flip-mirror control sequences."""
+
 import sys, time
 import os
 # robust import bootstrap (independent of CWD / interpreter): add the repo

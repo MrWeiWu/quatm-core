@@ -1,3 +1,5 @@
+"""Atomic data used by the optical-dipole-trap models."""
+
 # some ion properties in SI
 # clebsch gordan coefficients are squared
 

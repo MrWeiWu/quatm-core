@@ -1,3 +1,5 @@
+"""Optical-dipole-trap utility calculations."""
+
 #from decimal import *
 from scipy import constants as const
 import numpy as np

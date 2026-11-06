@@ -1,3 +1,5 @@
+"""Light-matter interaction models for optical traps."""
+
 #from decimal import *
 from scipy import constants as const
 

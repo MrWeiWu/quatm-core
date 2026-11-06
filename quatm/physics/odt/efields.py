@@ -1,3 +1,5 @@
+"""Electric-field models for optical-dipole traps."""
+
 from scipy import constants as const
 import numpy as np
 

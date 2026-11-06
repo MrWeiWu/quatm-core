@@ -1,3 +1,5 @@
+"""Shared numerical helpers for optical-trap models."""
+
 
 import scipy
 import numpy as np

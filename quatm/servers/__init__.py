@@ -1,3 +1,5 @@
+"""Core servers for messaging, properties, data and process lifecycle."""
+
 import os
 import pkgutil
 import threading
@@ -8,10 +10,9 @@ import time
 # complete without those modules.
 __path__ = pkgutil.extend_path(__path__, __name__)
 
-# 父进程存活判断的唯一实现（跨平台、不依赖 psutil）在 heartbeat 模块；
-# 这里必须放在 ``_start_parent_watchdog()`` **之前**导入——看门狗在包 import
-# 早期就启动，晚导入会让它拿不到函数。heartbeat.py 只依赖标准库，不会造成
-# 循环导入。
+# The heartbeat module is the single cross-platform implementation of parent
+# liveness. Import it before starting the parent watchdog; heartbeat only uses
+# the standard library and cannot create an import cycle.
 from .heartbeat import parent_alive
 
 #: 父进程死亡钩子的总预算（秒）：到点无论钩子跑没跑完都强制 ``os._exit(0)``。
@@ -130,11 +131,8 @@ def _start_parent_watchdog():
 _start_parent_watchdog()
 
 # ---------------------------------------------------------------------------
-# 激活检查**不在这里**：quatm.servers 属于 AGPL 子包，import 期依赖闭源
-# quatm.licensing 会让 AGPL 部分成为闭源模块的衍生物，并让干净检出无法跑
-# 检查/测试。授权门控统一放在入口层（GUI 启动 setup_app_theme / Web 启动
-# run / Process Manager），见 quatm.licensing.require_license()；边界由
-# scripts/checks/license_boundary.py 静态守护。
+# Licensing and activation are entry-point concerns in the optional platform.
+# The public core must remain importable without the commercial package.
 # ---------------------------------------------------------------------------
 
 import zmq

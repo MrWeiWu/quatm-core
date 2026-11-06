@@ -1,27 +1,15 @@
-'''
-读取配置文件并为 Properties 提供启动值。
+"""Read the project configuration and resolve user-project paths.
 
-路径模型（详见 docs/overview/01-architecture.md）：
+``QUATM_PROJECT_ROOT`` is resolved in this order:
 
-* ``QUATM_DIR``（本包）     -- 只读核心：quatm/{drivers,icons,GUI,...}
-* ``PROJECT_ROOT``（用户项目）-- 每实验室/每用户数据：
-      <project>/configuration/   configfile、properties、device_db.py ...
-      <project>/experiments/     用户实验脚本
-      <project>/Data/            测量数据
-      <project>/images/          保存的图像
+1. the ``QUATM_PROJECT_ROOT`` environment variable;
+2. the nearest parent containing ``configuration/configfile/configfile.json``
+   or a ``.quatm_project`` marker;
+3. a legacy repository-layout fallback.
 
-PROJECT_ROOT 按以下顺序解析：
-
-1. 环境变量 ``QUATM_PROJECT_ROOT``（项目启动器设置）；
-2. 从当前工作目录向上，找到第一个含
-   ``configuration/configfile/configfile.json`` 或 ``.quatm_project`` 标记
-   的目录；
-3. 遗留回退：包目录的上一级的上一级（``<repo>/quatm/...`` 布局仍指向
-   ``<repo>``）。
-
-这样安装后的包可以从任意用户项目工作，而不依赖旧的 ``<repo>/quatm``
-目录布局。
-'''
+The module is usable from any working directory once the package is installed;
+it does not require the old ``<repo>/quatm`` layout.
+"""
 
 
 import os
@@ -36,9 +24,9 @@ import shutil
 
 from pathlib import Path
 
-# 激活检查**不在这里**（AGPL 子包不得在 import 期依赖闭源 licensing）：
+# 激活检查**不在这里**（AGPL 子包不得在 import 期依赖commercial licensing）：
 # 入口层统一调用 quatm.licensing.require_license()，边界见
-# scripts/checks/license_boundary.py。
+# the release checks。
 
 # ---------------------------------------------------------------------------
 # package-internal locations (always derived from this file's own position)

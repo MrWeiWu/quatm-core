@@ -1,3 +1,5 @@
+"""Image logger service for camera streams."""
+
 import sys
 import os
 # robust import bootstrap (independent of CWD / interpreter): add the repo

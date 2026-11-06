@@ -1,20 +1,9 @@
-"""InfluxDB 连接配置解析（AGPL 侧的共享实现）。
+"""Shared InfluxDB connection configuration for Quatm services.
 
-**为什么单独成模块**：仓库里有多个 InfluxDB 使用方（``quatm/servers/influxdb``
-服务端、``quatm/clients/influxdb`` 客户端、``quatm/physics`` 的绘图工具、
-``quatm/analysis`` / ``quatm/monitor`` 的后台脚本）。解析规则必须只有一份，
-否则又会出现"每个文件一套配置名"。放在 ``quatm.servers``（AGPL）里，AGPL 的
-``quatm.physics`` 才能合法复用它——不能让 AGPL 的 physics 去 import 专有的
-``quatm.clients``（边界见 ``scripts/checks/license_boundary.py``）。
-
-**解析优先级**（逐项解析，配置文件优先）：
-
-1. ``configuration/configfile/configfile.json`` 的 ``Servers/InfluxDB`` 段；
-2. 环境变量 ``INFLUX_URL`` / ``INFLUX_TOKEN`` / ``INFLUX_ORG`` /
-   ``INFLUX_HOST`` / ``INFLUX_PORT``——补配置文件里缺的项；
-3. 仍缺失时抛出 :class:`InfluxDBConfigError`，**绝不回退到内置凭据**。
-
-错误信息只列缺失的键名与环境变量名，**任何情况下都不打印 token**。
+Configuration is resolved from the ``Servers/InfluxDB`` section of
+``configuration/configfile/configfile.json``, then from ``INFLUX_*``
+environment variables. Missing credentials raise :class:`InfluxDBConfigError`;
+secrets are never included in error messages.
 """
 
 import os

@@ -3,7 +3,7 @@
 
 本模块是**纯数据层**：只读 Properties / configfile / 文件系统并做本机探测，
 **不写任何属性、不触发任何控制动作、不 import Qt / psutil**，可在任何进程
-（GUI、Web、CLI、测试）里安全调用。GUI 窗口（task-42）只负责渲染这些字段。
+（GUI、Web、CLI、测试）里安全调用。GUI 窗口（the status view）只负责渲染这些字段。
 
 字段契约
 ========

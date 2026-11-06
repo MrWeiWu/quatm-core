@@ -43,15 +43,16 @@ from quatm.servers.configreader import PROJECT_ROOT
 
 
 def _adwin_driver_error():
-    """惰性解析 ADwin 后端的错误类型（AGPL 层不得在 import 期依赖专有驱动）。
+    """Resolve the ADwin backend error type lazily.
 
-    优先用**用户项目自带**的 ``drivers.adwin.adwin``（分发包里没有内置驱动），
-    仓库源码树里才回退到 ``quatm.drivers.adwin.adwin``；都没有时退化为通用
-    异常，``_push_realtime`` 仍能捕获并上报任何驱动错误。
+    The user-project driver ``drivers.adwin.adwin`` is preferred; a repository
+    checkout may provide ``quatm.drivers.adwin.adwin``. If neither is available,
+    a generic exception type is returned and ``_push_realtime`` still reports
+    the failure.
 
     解析放在函数里是有意的：``quatm.experiment`` 是 AGPL 子包，不能在模块
-    导入期依赖商用专有的 ``quatm.drivers``——边界由
-    ``scripts/checks/license_boundary.py`` 静态守护。
+    导入期依赖 optional driver packages. The same fallback keeps the AGPL
+    core usable when no project driver package is installed.
 
     Returns:
         type: 异常类型（``AdWinDriverError`` 或 ``Exception``）。

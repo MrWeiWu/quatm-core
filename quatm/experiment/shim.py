@@ -1,3 +1,5 @@
+"""Compatibility layer for legacy experiment entry points."""
+
 import sys
 import os
 # robust import bootstrap (independent of CWD / interpreter): add the repo

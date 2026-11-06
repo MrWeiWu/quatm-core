@@ -1,3 +1,5 @@
+"""Data-manager service for archival and save acknowledgements."""
+
 import sys
 import os
 # robust import bootstrap (independent of CWD / interpreter): add the repo

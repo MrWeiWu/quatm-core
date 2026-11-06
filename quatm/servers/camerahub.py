@@ -1,3 +1,5 @@
+"""Camera Hub service and camera control helpers."""
+
 import time, sys
 
 import os
@@ -55,7 +57,8 @@ class CameraHub:
     """相机管理器：负责相机的枚举、启停与配置。
 
     持有全局 SpinSystem 与各相机的 CamServer，通过属性树与 GUI 交互。
-    TODO: 自动配置；尽量不中断采集地加载配置；相机崩溃时检测并提示。
+    Future work: automatic reconfiguration, configuration reload without
+    interrupting acquisition, and camera-crash detection.
 
     Args:
         props (Properties): 本模块的属性树实例。
@@ -161,7 +164,7 @@ class CameraHub:
                     c.release()
 
                 except Exception as e:
-                    # TODO: get autoforce IP working
+                    # TODO: automatic IP configuration
                     # c.force_ip()
                     send_error(f'[CameraHub]  try autoforce IP: {e}')
 
@@ -281,14 +284,16 @@ class CamServer():
         """启动图像采集：初始化相机并以回调方式持续发送图像。
 
         以 _image_callback 为回调启动相机。自动重配置（autoreconfigure）
-        尚未实现（TODO：改用定时回调而非无限循环）。
+        Not implemented yet; a timed callback would be preferable to the
+        current polling loop.
         """
 
         # Start the cam with a callback function for image acquisition
         self.cam.initialize_cam()
         self.cam.start(self._image_callback)
 
-        # TODO: implement autoreconfigure if we really want it. Best way would be a timed callback instead of infinite loop.
+        # Future work: use a timed callback for automatic reconfiguration
+        # instead of a polling loop.
 
     def stop(self):
         """停止图像采集并释放相机（调用 cam.finalize_cam 收尾）。"""
@@ -419,7 +424,7 @@ class CamServer():
 
 
 class Blackfly():
-    """Blackfly 相机私有驱动的封装：支持用单个字典批量设置相机属性。
+    """Blackfly 相机相机驱动的封装：支持用单个字典批量设置相机属性。
 
     Args:
         serial (int): 相机序列号。

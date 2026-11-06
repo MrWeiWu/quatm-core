@@ -1,3 +1,5 @@
+"""ZeroMQ XSUB/XPUB proxy used by the message hubs."""
+
 import zmq
 import sys
 

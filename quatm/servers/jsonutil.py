@@ -7,7 +7,7 @@ dict/list，把 numpy 标量取 ``.item()``、把 ndarray 转 ``.tolist()``。�
 前端难以统一处理。本模块是唯一实现。
 
 放在 ``quatm/servers`` 而不是 ``quatm/web``：AGPL 边界允许 web 依赖 servers
-（见 ``scripts/checks/license_boundary.py``），且服务器侧将来也可能需要把
+（见 ``the release checks``），且服务器侧将来也可能需要把
 numpy 数据转成可 JSON 类型。本模块只依赖标准库。
 
 另外提供两个跨平台健壮的小工具（Windows 语义与 POSIX 不同）：

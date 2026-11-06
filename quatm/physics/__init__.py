@@ -1,12 +1,13 @@
-"""quatm.physics —— 原子 / 离子实验物理支撑子包（原独立 `pytiamo` 包）。
+"""Atomic and ionic physics models used by Quatm experiments.
 
-作为 quatm 核心的一部分随包安装，包含：
+The subpackage contains:
 
-* ``atom_ion``    -- Feshbach 图工具等原子-离子实验辅助
-* ``odt``         -- 光偶极阱（optical dipole trap）模型、激光场与评估
-* ``tiamo``       -- Tiamo 激光器校准数据与工具
+* ``atom_ion`` -- Feshbach plots and atom-ion experiment helpers
+* ``odt``      -- optical-dipole-trap models, laser fields and evaluations
+* ``tiamo``    -- Tiamo laser calibration data and helpers
 
-历史导入路径 ``pytiamo.*`` 已废弃，请使用 ``quatm.physics.*``。
+Legacy imports from ``pytiamo.*`` are no longer supported; use
+``quatm.physics.*``.
 """
 
 __version__ = "1.0"

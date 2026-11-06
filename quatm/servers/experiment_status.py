@@ -1,3 +1,5 @@
+"""Experiment status and progress reporting."""
+
 import time
 from datetime import datetime
 import sys

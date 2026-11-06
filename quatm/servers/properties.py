@@ -1,3 +1,5 @@
+"""Distributed property tree and property attributes."""
+
 import sys
 import os
 # robust import bootstrap (independent of CWD / interpreter): add the repo

@@ -1,32 +1,12 @@
-"""项目设备库（``configuration/device_db.py``）的读取、地址提取与条目生成。
+"""Read and generate a project ``configuration/device_db.py``.
 
-`device_db.py` 是实验与硬件之间的契约表：每个条目说明「实验里叫什么名字、
-用哪个驱动的哪个类、构造参数是什么」。多个工具都要读懂它——
+``device_db.py`` maps the names used by experiments to driver classes and
+their constructor arguments. This module parses that file with :mod:`ast` (it
+never imports or executes project code), extracts instrument addresses and
+generates draft entries for new devices.
 
-* `quatm/drivers/discovery.py`（专有）：设备管理器 GUI 的项目栏、驱动匹配；
-* `quatm/utils/driver_diagnose.py`（AGPL，随包分发）：诊断时要知道该测哪些地址；
-* 以后的分析/CLI 工具。
-
-所以**解析与生成放在这里**（`quatm/utils/`，AGPLv3 核心、无 Qt、无硬件依赖、
-无许可门控），而 `quatm/drivers/discovery.py` 只负责硬件那一半（总线扫描、
-探针、驱动匹配）并从这里导入。这样：
-
-* 依赖方向保持 ``drivers → utils``（与 `quatm/drivers/*` 早已 import
-  `quatm.utils.i18n` 一致），不会让 AGPL 核心反过来依赖专有的 drivers 包；
-* 随包分发的 `quatm-driver-diagnose` 不会因为「没装/没授权 drivers 包」而失效。
-
-解析全程使用 `ast`，**不导入也不执行**项目代码（与 `quatm/drivers/catalog.py`、
-`GUI/browser/experiment_check.py` 同一做法）。
-
-典型用法::
-
-    from quatm.utils import device_db
-
-    entries, note = device_db.parse_device_db()      # 项目根由 QUATM_PROJECT_ROOT 决定
-    print(device_db.addresses(entries))              # ['USB0::…', 'serial:///dev/…']
-    print(device_db.format_device_db_entry(
-        device_db.device_db_entry('my_psu', 'rigol.dp1116a', 'RigolDP1116A',
-                                  address='USB0::0x1AB1::…::INSTR')))
+The parser has no Qt, hardware or licensing dependencies and is safe to use
+from the core CLI, diagnostics and the optional desktop tools.
 """
 
 import ast

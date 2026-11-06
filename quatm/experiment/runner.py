@@ -3,7 +3,7 @@
 
 用途：把一个实验任务放到**独立子进程**里跑，父进程（GUI 队列或 Web）可以
 ``pause``/``resume``/``terminate`` 它而不会冻结界面；实验代码崩溃/卡死也只
-影响这个子进程。本模块只实现 runner 侧协议（manager 集成见 task-38）。
+影响这个子进程。本模块只实现 runner 侧协议（manager 集成见 the isolated runner protocol）。
 
 执行语义与 ``quatm/GUI/experiment/experiment_manager.py`` 的队列 worker 一致：
 
@@ -63,11 +63,11 @@
   失败（发生 ``error`` 事件）；
 * ``2``：命令行或 stdin 协议错误（坏任务 JSON、缺少必需参数等）。
 
-数据保存回执（task-36 共用 API）
+数据保存回执（the save-ack protocol 共用 API）
 ================================
 
 runner 在**每个 run 的 ``.end`` 之后**（``_start_run`` 返回时 ``.end`` 已由实验
-对象发出）调用 task-36 的共用 API ``quatm.servers.datamgr.save_ack(token,
+对象发出）调用 the save-ack protocol 的共用 API ``quatm.servers.datamgr.save_ack(token,
 expected_seq, timeout)``，语义与 GUI ``ExperimentManager`` 一致：
 
 * 配置优先级：任务里的 ``save_ack`` 段 > 实验属性库的
@@ -80,12 +80,12 @@ expected_seq, timeout)``，语义与 GUI ``ExperimentManager`` 一致：
   ``run``/``auto`` = 每 run 等一次；``task`` = 整个任务结束等一次；``off`` = 不等。
 * token：任务上下文里的 ``save_ack.token`` / ``token``，否则 runner 生成
   ``runner-<pid>-<ms>``；它会通过 ``Experiment.set_ack_context()`` 挂到数据消息的
-  ``_ack`` 标记上（task-36），Data Manager 据此统计本任务收到了哪些消息。
-* ``expected_seq`` 取自 task-36 的 clients ack 计数（本 run 结束时已发出的最大
+  ``_ack`` 标记上（the save-ack protocol），Data Manager 据此统计本任务收到了哪些消息。
+* ``expected_seq`` 取自 the save-ack protocol 的 clients ack 计数（本 run 结束时已发出的最大
   序号）。runner **不**自己轮询 h5/文件系统（不使用第二套回执实现）。
 * ``available=False``（没有 Data Manager、旧版无控制端点、控制端点不可达）→
   **降级**：只发 ``log`` warning，退回任务结束后的 ``save_errors`` 事后检查，
-  **不**判任务失败（与 task-36 约定一致）；
+  **不**判任务失败（与 the save-ack protocol 约定一致）；
 * 明确回执失败（``ok=False``）且 ``strict=True`` → ``error`` 事件 + 退出码 1；
   ``strict=False`` → ``log`` error 后继续。
 """
@@ -131,7 +131,7 @@ _CONTROL_POLL_S = 0.02
 #: 合法的保存回执模式。
 _SAVE_ACK_MODES = ('off', 'warn', 'strict')
 
-#: task-36 的保存回执 API 查找表：``(模块名, 函数名)``。
+#: the save-ack protocol 的保存回执 API 查找表：``(模块名, 函数名)``。
 #: API 落地后**只改这里**（不要在 runner 里写第二套轮询 h5/文件系统的实现）。
 _SAVE_ACK_PROVIDERS = (
     ('quatm.servers.datamgr', 'save_ack'),
@@ -508,9 +508,9 @@ def set_dict(experiment, name, value):
 
 
 # ---------------------------------------------------------------------------
-# 数据保存回执（task-36 共用 API：quatm.servers.datamgr.save_ack）
+# 数据保存回执（the save-ack protocol 共用 API：quatm.servers.datamgr.save_ack）
 # ---------------------------------------------------------------------------
-#: 与 GUI ``ExperimentManager`` 相同的属性树配置键（task-38 会把它们带进任务，
+#: 与 GUI ``ExperimentManager`` 相同的属性树配置键（the isolated runner protocol 会把它们带进任务，
 #: runner 在能连属性库时也可直接读；隔离 runner 的缺省是 ``off``，见
 #: :func:`save_ack_config`）。
 SAVE_ACK_MODE_PROP = '/Browser/ExperimentQueue/save_ack_mode'
@@ -523,7 +523,7 @@ _SAVE_ACK_MODES = ('off', 'run', 'task', 'auto')
 
 
 def find_save_ack():
-    """查找 task-36 的共用保存回执 API ``save_ack(token, expected_seq, timeout)``。
+    """查找 the save-ack protocol 的共用保存回执 API ``save_ack(token, expected_seq, timeout)``。
 
     落地位置在 ``quatm/servers/datamgr.py``（见 :data:`_SAVE_ACK_PROVIDERS`）。
     找不到时返回 None：调用方按"回执不可用"降级，**不要**在 runner 里另写一套
@@ -563,7 +563,7 @@ def save_ack_config(experiment, task):
     """解析保存回执配置（优先级：任务 ``save_ack`` 段 > 属性树 > 默认 off）。
 
     GUI ``ExperimentManager`` 从 ``/Browser/ExperimentQueue/save_ack_*`` 三个属性
-    读配置；隔离 runner 允许任务里显式携带 ``save_ack``（task-38 会把 manager
+    读配置；隔离 runner 允许任务里显式携带 ``save_ack``（the isolated runner protocol 会把 manager
     的配置放进任务），两者都没有时缺省 ``off``（不在隔离进程里凭猜测等回执）。
 
     Args:
@@ -601,7 +601,7 @@ def save_ack_config(experiment, task):
 
 
 def _ack_context_seq():
-    """取本进程已发出的带回执标记消息的最大序号（task-36 的 clients 计数）。
+    """取本进程已发出的带回执标记消息的最大序号（the save-ack protocol 的 clients 计数）。
 
     Returns:
         int: 序号；取不到时 0（无数据 run 应快速通过）。
@@ -614,13 +614,13 @@ def _ack_context_seq():
 
 
 def wait_save_ack(config, expected_seq, emit, state=None):
-    """等待一次保存回执（调用 task-36 的 ``save_ack`` 共用 API）。
+    """等待一次保存回执（调用 the save-ack protocol 的 ``save_ack`` 共用 API）。
 
     语义（与 GUI manager 的 ``_wait_save_ack`` 对齐）：
 
     * ``mode == 'off'``：直接返回成功（不调用 API）；
     * API 未就绪 / 返回 ``available=False``（旧 Data Manager、控制端点不可达）：
-      **降级**——只发一条 ``log`` warning，不判任务失败（与 task-36 的约定一致：
+      **降级**——只发一条 ``log`` warning，不判任务失败（与 the save-ack protocol 的约定一致：
       回执不可用不是数据丢失，调用方应退回事后 ``save_errors`` 检查）；
     * 回执明确失败（``ok=False``）且 ``strict=True``：把失败写进 ``state``，
       由调用方转成 ``error`` 事件 + 退出码 1；``strict=False`` 只发 log 后继续。
@@ -695,7 +695,7 @@ def _save_ack_error(config, exc, emit, state):
 def _install_save_ack(experiment, config, emit, state):
     """把任务 token 挂到实验数据流上（``Experiment.set_ack_context``）。
 
-    task-36 让数据消息带上 ``_ack={'token','seq'}``，Data Manager 据此统计本任务
+    the save-ack protocol 让数据消息带上 ``_ack={'token','seq'}``，Data Manager 据此统计本任务
     收到了哪些消息。runner 自己**在每 run 结束（``_start_run`` 返回、``.end`` 已
     发出）后**调用共用 ``save_ack`` 等待回执（见 :func:`wait_save_ack`）——不复用
     GUI manager 的 ``set_save_ack_hook`` 回调：隔离 runner 需要自己的 strict/warn
@@ -964,7 +964,7 @@ def execute_task(project, filepath, class_name, task, control=None, emit=None):
         experiment = experiment_class()
         experiment.build()
 
-        # ---- 父进程死亡钩子（P0-3 硬件安全态）----
+        # ---- 父进程死亡钩子（the hardware safe-state watchdog 硬件安全态）----
         # 加载/built 之后、进入运行循环之前注册：父进程被 kill -9 时先请求
         # 终止并尽力 close()，而不是直接 os._exit 让设备保持最后输出。
         cleanup = _HardwareSafeCleanup(experiment, control=control, emit=emit)
@@ -1025,7 +1025,7 @@ def execute_task(project, filepath, class_name, task, control=None, emit=None):
                 emit('run_done', run=run_index, rep=last_rep)
                 if ack_config['mode'] in ('run', 'auto'):
                     # 每 run 结束（``.end`` 已由 ``_start_run`` 发出）后等一次
-                    # 保存回执；expected_seq 取自 task-36 的 clients 计数。
+                    # 保存回执；expected_seq 取自 the save-ack protocol 的 clients 计数。
                     if ack_context_ready:
                         expected_seq = _ack_context_seq()
                     else:

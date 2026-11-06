@@ -1,15 +1,8 @@
-"""i18n 转发垫片：实现统一在 :mod:`quatm.i18n`。
+"""Compatibility import path for :mod:`quatm.i18n`.
 
-历史：实现曾经放在本模块（``quatm/utils/i18n.py``），后来收拢到
-``quatm.i18n``；但迁移时旧实现没有删干净，本模块里仍留着一份自己的
-``_state``/``tr()``/``set_language()``，导致 GUI（经
-``quatm.GUI.infra.i18n`` 转发到 ``quatm.i18n``）与非 GUI（直接 import 本模块）
-看到**两套独立的语言状态**——例如 GUI 已切到中文时 ``send_warning`` 仍用另一套
-状态，测试/运行时语言不一致。
-
-现在这里**只做转发**（与 ``quatm.GUI.infra.i18n`` 相同的做法）：对外接口与
-:mod:`quatm.i18n` 完全一致，转发的是同一批函数对象，所以
-``quatm.utils.i18n.tr is quatm.i18n.tr`` 成立。不要再往本文件里写实现逻辑。
+The implementation lives in :mod:`quatm.i18n`. This module only re-exports its
+public API so existing imports continue to work and both paths share one
+language state.
 """
 
 from quatm.i18n import *  # noqa: F401,F403

@@ -1,3 +1,5 @@
+"""Laser models used by optical-dipole-trap calculations."""
+
 # some ion properties in SI
 # clebsch gordan coefficients are squared
 
@@ -36,9 +38,10 @@ class Laser(object):
             **kwargs: 可含 'waist'（同时设置两方向束腰）。
         """
         
-        assert type(wavelength) is not dict, '''Passing the dict as argument
-        was always a bad idea and is now discontinued.
-        Just unpack it using ** you dumbass shitperson'''
+        if isinstance(wavelength, dict):
+            raise TypeError(
+                'The legacy dict form for wavelength is no longer supported; '
+                'pass wavelength, frequency or wavenumber as a keyword argument.')
         
         if wavelength is not None:    
             self._wavelength = wavelength

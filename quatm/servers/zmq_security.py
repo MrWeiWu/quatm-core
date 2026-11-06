@@ -34,7 +34,7 @@
 warning（含路径与建议）并**回退明文**；非回环绑定 + 明文时再额外打一条醒目
 警告（与 :func:`quatm.servers.configreader.warn_if_exposed` 呼应）。
 模块级缓存解析结果：**不要**每个 socket 都重读密钥文件；运行时轮换密钥必须
-重启所有 quatm 进程（见 ``docs/adr/0007-zmq-curve.md``）。
+重启所有 quatm 进程（见 ``the ZMQ security notes``）。
 """
 
 import logging

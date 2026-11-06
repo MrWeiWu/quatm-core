@@ -1,3 +1,5 @@
+"""Data logger service for HDF5 acquisition."""
+
 import sys
 import os
 # robust import bootstrap (independent of CWD / interpreter): add the repo

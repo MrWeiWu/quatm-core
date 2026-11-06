@@ -1,58 +1,11 @@
-"""常驻消息记录服务：把 Message Hub 上的消息持续写进消息库（完全不依赖界面）。
+"""Persistent service that records Message Hub traffic.
 
-背景（用户报告的问题）
---------------------
-消息落盘原本只由 Stream Monitor 窗口里的 ``MessageReceiver`` 完成：窗口不开，
-消息就没人接、没人写库，历史页自然查不到东西——实验过程中忘了开监控窗口，
-或者只跑后端不跑界面，日志就丢了。
+The service subscribes to the message stream, batches records and writes them
+to the message store. It is independent of any GUI: as long as the service is
+running, messages are archived even when no monitoring window is open.
 
-本模块把“订阅 → 解析 → 攒批 → 写库”这套逻辑做成一个**无界面常驻服务**，
-由 ProcessManager 按 configfile 的 ``Servers`` 条目拉起（``active: true``）。
-只要后端在跑，消息就一直进库，与任何界面无关。
-
-谁负责落盘
-----------
-* **常驻服务（本模块）**：消息库的主写者，界面开不开都不影响记录；
-* **界面**（``quatm/GUI/streammonitor``）：服务在跑就只读库，没跑就用
-  :class:`~quatm.GUI.streammonitor.receiver.MessageReceiver` 兜底记录
-  （只开界面、没起后端时仍然不丢消息）。
-
-记录权（唯一写者）
-------------------
-“同一条消息到底写几次”不能靠内容去重：同一条文本在同一秒内合法地重复很多次是
-常见情况（消息风暴；实测历史库里有同一条内容 1 秒内出现 374 次）。所以本模块用
-一个**记录权心跳文件**保证任何时刻只有一个写者：
-
-* 常驻服务写 ``message_logger.lock``，界面兜底记录时写 ``message_receiver.lock``
-  （都在消息库同目录），每 :data:`HEARTBEAT_INTERVAL` 秒刷新一次；
-* :func:`recorder_status` 返回当前持有记录权的那个；界面在开机时与每次刷新时
-  查一次，发现常驻服务在位就立刻停写、变成只读；
-* 常驻服务启动时如果发现界面正在记录（心跳新鲜），会让位等它退出（消息一条
-  不少：界面在写），而不是两边一起写。
-* 两边都判“有点不新鲜”（进程被强杀、心跳过期）时，界面接管：最多丢掉
-  :data:`STALE_AFTER` 秒内没有写者的消息，但绝不会出现重复行。
-
-心跳文件内容含 pid/主机/时间戳/数据库路径；文件过期或 pid 消失都视为
-“没在跑”（干净退出时会直接删掉）。
-
-存储级别策略
-------------
-“只保存 warning/error”这类策略放在**数据库同目录**的 ``store_policy.json``
-（见 :func:`quatm.servers.messagestore.save_level_policy`）：界面改设置时写文件，
-本服务定期重读，因此常驻记录与界面看到的是同一套策略。
-
-保留策略（消息库不会无限增长）
-------------------------------
-消息库以前只写不删，历史能到 GB 级。现在本服务每写入
-:data:`PRUNE_EVERY_MESSAGES` 条消息、或每隔 :data:`PRUNE_INTERVAL_S` 秒，就调用
-一次 :meth:`~quatm.servers.messagestore.MessageStore.prune`（默认保留 30 天 /
-最多 20 万条；天数与条数可经 ``Properties('MessageStore')`` 或环境变量
-``QUATM_MESSAGE_RETENTION_DAYS`` / ``QUATM_MESSAGE_MAX_ROWS`` 调整）。清理在
-记录器自己的线程里做，不占 GUI 线程；失败只记 ``last_error``，不影响继续记录。
-
-启动方式::
-
-    python quatm/servers/messagelogger.py 'Servers/Message Logger'
+The module also arbitrates a single-writer heartbeat lock so the service and an
+optional UI fallback recorder cannot write the same message twice.
 """
 
 import sys

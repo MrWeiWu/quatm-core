@@ -1,3 +1,5 @@
+"""Experiment base class, device resolution and run/scan lifecycle."""
+
 import os
 import importlib
 from importlib import util

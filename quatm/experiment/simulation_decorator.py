@@ -1,3 +1,5 @@
+"""Helpers for running experiment code in simulation mode."""
+
 import sys
 import os
 # robust import bootstrap (independent of CWD / interpreter): add the repo

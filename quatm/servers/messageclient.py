@@ -1,3 +1,5 @@
+"""Client-side message publishing and logging helpers."""
+
 import sys
 import os
 # robust import bootstrap (independent of CWD / interpreter): add the repo

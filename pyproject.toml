@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "quatm-core"
 version = "1.0.1"
-description = "AGPLv3 core runtime for the Quatm experiment control framework"
+description = "AGPL-3.0 core runtime for the Quatm experiment control framework"
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "GNU Affero General Public License v3 (AGPL-3.0)" }
@@ -39,11 +39,15 @@ dependencies = [
     "cython",
 ]
 
-[project.optional-dependencies]
-dev = ["pytest"]
-
 [project.scripts]
 quatm-driver-diagnose = "quatm.utils.driver_diagnose:main"
+
+[project.urls]
+Homepage = "https://quatm.com/"
+Documentation = "https://quatm.com/en/docs/"
+Repository = "https://github.com/quatm-team/quatm-core"
+Issues = "https://github.com/quatm-team/quatm-core/issues"
+Changelog = "https://github.com/quatm-team/quatm-core/blob/main/CHANGELOG.md"
 
 [tool.setuptools]
 packages = { find = { include = ["quatm", "quatm.*"] } }
